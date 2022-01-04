@@ -122,10 +122,10 @@ struct	Matrix : public std::vector<std::vector<T>>
 
 		this->corrupted();
 		if (this->width() != rhs.size())
-			throw std::logic_error("Operation on different size Matrix and Vector");
+			throw std::logic_error("Operation on different size Matrix and Vect"
+				"or");
 		res.resize(this->height());
 		res.null();
-
 		for (unsigned j = 0; j < this->height(); ++j)
 			for (unsigned i = 0; i < this->width(); ++i)
 				res[j] += (*this)[j][i] * rhs[i];
@@ -154,6 +154,7 @@ struct	Matrix : public std::vector<std::vector<T>>
 	Matrix	&operator*=(float rhs) { return (*this = *this * rhs); }
 
 	/* -^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^ */
+	/* Basic operations for row echelon reduction */
 
 	private :
 
@@ -300,84 +301,42 @@ struct	Matrix : public std::vector<std::vector<T>>
 	{
 		Matrix		res(this->height(), this->height() * 2);
 		Matrix		inverse(this->height(), this->height());
-		unsigned	column;
-		unsigned	pivot_new;
 
-		column = 0;
-		// this->corrupted(); // included in copy constructor
+		this->corrupted();
 		if (this->width() != this->height())
 			throw std::logic_error("Determinant on non square matrix");
-		for (unsigned i = 0; i < res.height(); ++i)
+		for (unsigned i = 0; i < res.height(); ++i)	/* concatenate identity */
 		{
 			res[i][i + res.height()] = (T)1;
 			for (unsigned j = 0; j < res.height(); ++j)
 				res[i][j] = (*this)[i][j];
 		}
-		for (unsigned pivot_row = 0; pivot_row < this->height(); ++pivot_row)
-		{
-			pivot_new = pivot_row;
-			while (pivot_new < res.height() && res[pivot_new][column] == 0)
-				++pivot_new;
-			if (pivot_new >= res.height())
-				throw std::logic_error("Non invertible matrix");
-			if (pivot_new != pivot_row)
-				res._swap_row(pivot_row, pivot_new);
-			for (unsigned i = 0; i < this->height(); ++i)
-				if (res[i][column] != 0 && res[pivot_row][column] &&
-					i != pivot_row)
-					res._add_scalar_row(i, pivot_row,
-						-res[i][column] / res[pivot_row][column]);
-			if (column > res.width())
-				break;
-			if (res[pivot_row][column] != 0)
-				res._scalar_row(pivot_row, res[pivot_row][column]);
-			++column;
-		}
-		for (unsigned i = 0; i < inverse.height(); ++i)
+		res = res.reduced_row_echelon();
+		for (unsigned i = 0; i < inverse.height(); ++i)	/* extract inverse */
 			for (unsigned j = 0; j < inverse.width(); ++j)
 				inverse[i][j] = res[i][j + res.height()];
 		return (inverse);
 	}
 
+	unsigned	rank(void) const
+	{
+		Matrix		tmp;
+		unsigned	rank;
+		bool		empty;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		this->corrupted();
+		tmp = this->reduced_row_echelon();
+		for (rank = 0; rank < tmp.height(); ++rank)
+		{
+			empty = true;
+			for (unsigned i = 0; i < tmp.width(); ++i)
+				if (tmp[rank][i] != 0)
+					empty = false;
+			if (empty)
+				break ;
+		}
+		return (rank);
+	}
 };
 
 /* ########################################################################## */
