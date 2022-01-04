@@ -258,6 +258,87 @@ struct	Matrix : public std::vector<std::vector<T>>
 		return (res);
 	}
 
+	T		determinant(void) const
+	{
+		Matrix		res(*this);
+		unsigned	column;
+		unsigned	pivot_new;
+		T			determinant;
+
+		determinant = (T)1;
+		column = 0;
+		// this->corrupted(); // included in copy constructor
+		if (this->width() != this->height())
+			throw std::logic_error("Determinant on non square matrix");
+		for (unsigned pivot_row = 0; pivot_row < this->height(); ++pivot_row)
+		{
+			pivot_new = pivot_row;
+			while (pivot_new < res.height() && res[pivot_new][column] == 0)
+				++pivot_new;
+			if (pivot_new >= res.height())
+				return (0);	/* null coefficient in the diagonal */
+			if (pivot_new != pivot_row)
+			{
+				res._swap_row(pivot_row, pivot_new);
+				determinant *= -1;
+			}
+			for (unsigned i = 0; i < this->height(); ++i)
+				if (res[i][column] != 0 && res[pivot_row][column] &&
+					i != pivot_row)
+					res._add_scalar_row(i, pivot_row,
+						-res[i][column] / res[pivot_row][column]);
+			if (column > res.width())
+				break;
+			++column;
+		}
+		for (unsigned i = 0; i < res.size(); ++i)
+			determinant *= res[i][i];
+		return (determinant);
+	}
+
+	Matrix	inverse(void) const
+	{
+		Matrix		res(this->height(), this->height() * 2);
+		Matrix		inverse(this->height(), this->height());
+		unsigned	column;
+		unsigned	pivot_new;
+
+		column = 0;
+		// this->corrupted(); // included in copy constructor
+		if (this->width() != this->height())
+			throw std::logic_error("Determinant on non square matrix");
+		for (unsigned i = 0; i < res.height(); ++i)
+		{
+			res[i][i + res.height()] = (T)1;
+			for (unsigned j = 0; j < res.height(); ++j)
+				res[i][j] = (*this)[i][j];
+		}
+		for (unsigned pivot_row = 0; pivot_row < this->height(); ++pivot_row)
+		{
+			pivot_new = pivot_row;
+			while (pivot_new < res.height() && res[pivot_new][column] == 0)
+				++pivot_new;
+			if (pivot_new >= res.height())
+				throw std::logic_error("Non invertible matrix");
+			if (pivot_new != pivot_row)
+				res._swap_row(pivot_row, pivot_new);
+			for (unsigned i = 0; i < this->height(); ++i)
+				if (res[i][column] != 0 && res[pivot_row][column] &&
+					i != pivot_row)
+					res._add_scalar_row(i, pivot_row,
+						-res[i][column] / res[pivot_row][column]);
+			if (column > res.width())
+				break;
+			if (res[pivot_row][column] != 0)
+				res._scalar_row(pivot_row, res[pivot_row][column]);
+			++column;
+		}
+		for (unsigned i = 0; i < inverse.height(); ++i)
+			for (unsigned j = 0; j < inverse.width(); ++j)
+				inverse[i][j] = res[i][j + res.height()];
+		return (inverse);
+	}
+
 
 
 

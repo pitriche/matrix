@@ -17,6 +17,6 @@ int	main()
 	std::cout << mat4 << "reduced row >\n" << mat4.reduced_row_echelon() << std::endl;
 	std::cout << mat5 << "reduced row >\n" << mat5.reduced_row_echelon() << std::endl;
 	std::cout << mat6 << "reduced row >\n" << mat6.reduced_row_echelon() << std::endl;
-	std::cout << mat7 << "reduced row >\n" << mat7.reduced_row_echelon() << std::endl;
+	std::cout << mat7 << "reduced row >\n" << mat7.reduced_row_echelon();
 	return (0);
 }
