@@ -80,7 +80,7 @@ struct	Matrix : public std::vector<std::vector<T>>
 	{
 		Matrix	res(*this);
 
-		this->corrupted();
+		// this->corrupted(); // included in copy constructor
 		rhs.corrupted();
 		this->size_check(rhs);
 		for (unsigned j = 0; j < this->height(); ++j)
@@ -94,7 +94,7 @@ struct	Matrix : public std::vector<std::vector<T>>
 	{
 		Matrix	res(*this);
 
-		this->corrupted();
+		// this->corrupted(); // included in copy constructor
 		rhs.corrupted();
 		this->size_check(rhs);
 		for (unsigned j = 0; j < this->height(); ++j)
@@ -108,7 +108,7 @@ struct	Matrix : public std::vector<std::vector<T>>
 	{
 		Matrix	res(*this);
 
-		this->corrupted();
+		// this->corrupted(); // included in copy constructor
 		for (unsigned j = 0; j < this->height(); ++j)
 			for (unsigned i = 0; i < this->width(); ++i)
 				res[j][i] *= rhs;
@@ -135,16 +135,12 @@ struct	Matrix : public std::vector<std::vector<T>>
 	/* Matrix - Matrix product */
 	Matrix	operator*(const Matrix &rhs) const
 	{
-		Matrix	res;
+		Matrix	res(this->height(), rhs.width());
 
 		this->corrupted();
 		rhs.corrupted();
 		if (this->width() != rhs.height())
 			throw std::logic_error("Operation on different size Matrices");
-		res = Matrix(this->height(), rhs.width());
-		// res.resize(this->height());
-		// for (auto &row : res)
-		// 	row.resize(rhs.width());
 
 		for (unsigned j = 0; j < res.height(); ++j)
 			for (unsigned i = 0; i < res.width(); ++i)
@@ -156,6 +152,151 @@ struct	Matrix : public std::vector<std::vector<T>>
 	Matrix	&operator+=(const Matrix &rhs) { return (*this = *this + rhs); }
 	Matrix	&operator-=(const Matrix &rhs) { return (*this = *this - rhs); }
 	Matrix	&operator*=(float rhs) { return (*this = *this * rhs); }
+
+	/* -^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^ */
+
+	private :
+
+	/* unprotected */
+	void	_swap_row(unsigned col1, unsigned col2)
+	{
+		T	tmp;
+
+		for (unsigned i = 0; i < (*this)[col1].size(); ++i)
+		{
+			tmp = (*this)[col1][i];
+			(*this)[col1][i] = (*this)[col2][i];
+			(*this)[col2][i] = tmp;
+		}
+	}
+
+	/* unprotected, divide a row by a scalar */
+	void	_scalar_row(unsigned col, T scalar)
+	{
+		for (unsigned i = 0; i < (*this)[col].size(); ++i)
+			if ((*this)[col][i] != 0)
+				(*this)[col][i] /= scalar;
+	}
+
+	/* unprotected */
+	void	_add_scalar_row(unsigned col1, unsigned col2, T scalar)
+	{
+		static const double	threshold = 1e-6;
+		Vector<T>			tmp((*this)[col2]);
+
+		tmp *= scalar;
+		for (unsigned i = 0; i < (*this)[col1].size(); ++i)
+		{
+			(*this)[col1][i] += tmp[i];
+			if (abs((*this)[col1][i]) < (T)threshold)
+				(*this)[col1][i] = 0;
+		}
+	}
+
+	/* -^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^-.-^ */
+
+	public :
+
+	/* Undefined behavior for 0x0 matrix */
+	T		trace(void) const
+	{
+		T	res;
+
+		this->corrupted();
+		if (this->width() != this->height())
+			throw std::logic_error("Trace on non square matrix");
+		if (this->width() > 0)
+			res = (*this)[0][0];
+		for (unsigned i = 1; i < this->width(); ++i)
+			res = res + (*this)[i][i];
+		return (res);
+	}
+
+	Matrix	transpose(void) const
+	{
+		Matrix	res(this->width(), this->height());
+
+		this->corrupted();
+		for (unsigned i = 0; i < this->height(); ++i)
+			for (unsigned j = 0; j < this->width(); ++j)
+				res[j][i] = (*this)[i][j];
+		return (res);
+	}
+
+	Matrix	reduced_row_echelon(void) const
+	{
+		Matrix		res(*this);
+		unsigned	column;
+		unsigned	pivot_new;
+
+		column = 0;
+		// this->corrupted(); // included in copy constructor
+		for (unsigned pivot_row = 0; pivot_row < this->height(); ++pivot_row)
+		{
+			pivot_new = pivot_row;
+			while (pivot_new < res.height() && res[pivot_new][column] == 0)
+				++pivot_new;
+			if (pivot_new >= res.height())
+			{
+				++column;
+				--pivot_row;	/* repeat row on next column */
+				continue ;
+			}
+			if (pivot_new != pivot_row)
+				res._swap_row(pivot_row, pivot_new);
+			for (unsigned i = 0; i < this->height(); ++i)
+				if (res[i][column] != 0 && res[pivot_row][column] &&
+					i != pivot_row)
+					res._add_scalar_row(i, pivot_row,
+						-res[i][column] / res[pivot_row][column]);
+			if (column > res.width())
+				break;
+			if (res[pivot_row][column] != 0)
+				res._scalar_row(pivot_row, res[pivot_row][column]);
+			++column;
+		}
+		return (res);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 /* ########################################################################## */
