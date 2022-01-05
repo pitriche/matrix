@@ -6,7 +6,8 @@ int	main()
 {
 	Matrix<double>	proj;
 
-	proj = projection(FT_PI / 4, 16.0 / 9.0, 1.0, 10.0);
+	/* ratio is 1, because this clearly wasn't made by a competent person */
+	proj = projection(FT_PI / 4, 1.0, 1.0, 10.0);
 	std::cout << proj;
 	return (0);
 }
