@@ -1,3 +1,6 @@
+template <typename T>
+struct	Matrix;
+
 #ifndef MATRIX_HPP
 # define MATRIX_HPP
 

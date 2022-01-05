@@ -1,3 +1,6 @@
+template <typename T>
+struct	Vector;
+
 #ifndef VECTOR_HPP
 # define VECTOR_HPP
 
